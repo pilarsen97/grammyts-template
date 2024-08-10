@@ -17,6 +17,7 @@ import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
 import type { Logger } from '#root/logger.js'
 import type { Config } from '#root/config.js'
 import type { PrismaClientX } from '#root/prisma/index.js'
+import { adminStartKeyboard } from '#root/bot/keyboards/index.js'
 
 interface Dependencies {
   config: Config
@@ -68,6 +69,11 @@ export function createBot(token: string, dependencies: Dependencies, options: Op
   protectedBot.use(adminFeature)
   if (isMultipleLocales)
     protectedBot.use(languageFeature)
+
+  // Actions on startup
+  bot.api.sendMessage(config.botMaintainer, '🟢 Bot has been started!', {
+    reply_markup: adminStartKeyboard,
+  })
 
   // must be the last handler
   protectedBot.use(unhandledFeature)

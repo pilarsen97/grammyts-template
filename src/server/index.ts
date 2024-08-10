@@ -72,20 +72,31 @@ export function createServer(dependencies: Dependencies) {
 export type Server = Awaited<ReturnType<typeof createServer>>
 
 export function createServerManager(server: Server, options: { host: string, port: number }) {
-  let handle: undefined | ReturnType<typeof Bun.serve>
+  let handle: undefined | ReturnType<typeof serve>
   return {
     start() {
-      handle = Bun.serve({
-        fetch: server.fetch,
-        hostname: options.host,
-        port: options.port,
+      return new Promise<{ url: string } >((resolve) => {
+        handle = serve(
+          {
+            fetch: server.fetch,
+            hostname: options.host,
+            port: options.port,
+          },
+          info => resolve({
+            url: info.family === 'IPv6'
+              ? `http://[${info.address}]:${info.port}`
+              : `http://${info.address}:${info.port}`,
+          }),
+        )
       })
-      return {
-        url: handle.url,
-      }
     },
     stop() {
-      return handle?.stop()
+      return new Promise<void>((resolve) => {
+        if (handle)
+          handle.close(() => resolve())
+        else
+          resolve()
+      })
     },
   }
 }
