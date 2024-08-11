@@ -392,3 +392,10 @@ bun add -d @types/bun
   </tr>
 </tbody>
 </table>
+
+sudo -i -u postgres
+psql
+CREATE DATABASE dbname;
+REATE USER username WITH PASSWORD 'password';
+GRANT ALL PRIVILEGES ON DATABASE dbname to username;
+ALTER USER username CREATEDB;

@@ -16,4 +16,32 @@ feature.command(
   setCommandsHandler,
 )
 
+feature.on(':photo', logHandle('data-photo'), async (ctx) => {
+  const photoArray = ctx.message?.photo
+  if (photoArray) {
+    const photoOriginal = photoArray.at(-1)
+    await ctx.reply(`Photo id: <pre>${photoOriginal?.file_id}</pre>`, {
+      reply_parameters: {
+        message_id: ctx.msg.message_id,
+      },
+    })
+  }
+})
+
+feature.on(':video', logHandle('data-video'), async (ctx) => {
+  await ctx.reply(`Video id: <pre>${ctx.message?.video?.file_id}</pre>`, {
+    reply_parameters: {
+      message_id: ctx.msg.message_id,
+    },
+  })
+})
+
+feature.on(':voice', logHandle('data-voice'), async (ctx) => {
+  await ctx.reply(`Voice id: <pre>${ctx.message?.voice?.file_id}</pre>`, {
+    reply_parameters: {
+      message_id: ctx.msg.message_id,
+    },
+  })
+})
+
 export { composer as adminFeature }
