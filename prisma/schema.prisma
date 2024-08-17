@@ -3,21 +3,25 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  USER
-  MANAGER
-  ADMIN
 }
 
 model User {
   id         Int      @id @default(autoincrement())
   telegramId BigInt   @unique @map("telegram_id")
-  username   String?
+  username   String   @map("username")
   updatedAt  DateTime @updatedAt @map("updated_at")
   createdAt  DateTime @default(now()) @map("created_at")
-  role       UserRole @default(USER)
+
+  @@map(name: "users")
+}
+
+model Payment {
+  id         Int      @id @default(autoincrement())
+  telegramId BigInt   @unique @map("telegram_id")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map(name: "payments")
 }

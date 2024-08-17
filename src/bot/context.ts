@@ -1,59 +1,49 @@
-import type { Update, UserFromGetMe } from '@grammyjs/types'
-import { type Api, Context as DefaultContext, type SessionFlavor } from 'grammy'
-import type { AutoChatActionFlavor } from '@grammyjs/auto-chat-action'
-import type { HydrateFlavor } from '@grammyjs/hydrate'
-import type { I18nFlavor } from '@grammyjs/i18n'
-import type { ParseModeFlavor } from '@grammyjs/parse-mode'
-import type { Logger } from '#root/logger.js'
-import type { Config } from '#root/config.js'
-import type { PrismaClientX } from '#root/prisma/index.js'
+import { Update, UserFromGetMe } from "@grammyjs/types";
+import { Context as DefaultContext, SessionFlavor, type Api } from "grammy";
+import type { AutoChatActionFlavor } from "@grammyjs/auto-chat-action";
+import type { HydrateFlavor } from "@grammyjs/hydrate";
+import type { I18nFlavor } from "@grammyjs/i18n";
+import type { ParseModeFlavor } from "@grammyjs/parse-mode";
+import type { Logger } from "#root/logger.js";
+import type { PrismaClientX } from "#root/prisma/index.js";
 
-export interface SessionData {
+export type SessionData = {
   // field?: string;
-}
+};
 
-interface ExtendedContextFlavor {
-  logger: Logger
-  config: Config
-  prisma: PrismaClientX
-}
+type ExtendedContextFlavor = {
+  prisma: PrismaClientX;
+  logger: Logger;
+};
 
 export type Context = ParseModeFlavor<
   HydrateFlavor<
     DefaultContext &
-    ExtendedContextFlavor &
-    SessionFlavor<SessionData> &
-    I18nFlavor &
-    AutoChatActionFlavor
+      ExtendedContextFlavor &
+      SessionFlavor<SessionData> &
+      I18nFlavor &
+      AutoChatActionFlavor
   >
->
+>;
 
 interface Dependencies {
-  logger: Logger
-  config: Config
-  prisma: PrismaClientX
+  prisma: PrismaClientX;
+  logger: Logger;
 }
 
-export function createContextConstructor(
-  {
-    logger,
-    config,
-    prisma,
-  }: Dependencies,
-) {
+export function createContextConstructor({ logger, prisma }: Dependencies) {
   return class extends DefaultContext implements ExtendedContextFlavor {
-    prisma: PrismaClientX
-    logger: Logger
-    config: Config
+    prisma: PrismaClientX;
+
+    logger: Logger;
 
     constructor(update: Update, api: Api, me: UserFromGetMe) {
-      super(update, api, me)
+      super(update, api, me);
 
+      this.prisma = prisma;
       this.logger = logger.child({
         update_id: this.update.update_id,
-      })
-      this.config = config
-      this.prisma = prisma
+      });
     }
-  } as unknown as new (update: Update, api: Api, me: UserFromGetMe) => Context
+  } as unknown as new (update: Update, api: Api, me: UserFromGetMe) => Context;
 }

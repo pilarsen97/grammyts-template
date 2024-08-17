@@ -1,17 +1,17 @@
-import { pino } from 'pino'
-import { config } from '#root/config.js'
+import { pino } from "pino";
+import { config } from "#root/config.js";
 
 export const logger = pino({
-  level: config.logLevel,
+  level: config.LOG_LEVEL,
   transport: {
     targets: [
-      ...(config.isDebug
+      ...(config.isDev
         ? [
             {
-              target: 'pino-pretty',
-              level: config.logLevel,
+              target: "pino-pretty",
+              level: config.LOG_LEVEL,
               options: {
-                ignore: 'pid,hostname',
+                ignore: "pid,hostname",
                 colorize: true,
                 translateTime: true,
               },
@@ -19,13 +19,13 @@ export const logger = pino({
           ]
         : [
             {
-              target: 'pino/file',
-              level: config.logLevel,
+              target: "pino/file",
+              level: config.LOG_LEVEL,
               options: {},
             },
           ]),
     ],
   },
-})
+});
 
-export type Logger = typeof logger
+export type Logger = typeof logger;

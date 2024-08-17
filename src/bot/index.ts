@@ -1,84 +1,72 @@
-import { autoChatAction } from '@grammyjs/auto-chat-action'
-import { hydrate } from '@grammyjs/hydrate'
-import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
-import type { BotConfig, StorageAdapter } from 'grammy'
-import { Bot as TelegramBot } from 'grammy'
-import { sequentialize } from '@grammyjs/runner'
-import { welcomeFeature } from '#root/bot/features/welcome.js'
-import { adminFeature } from '#root/bot/features/admin.js'
-import { languageFeature } from '#root/bot/features/language.js'
-import { unhandledFeature } from '#root/bot/features/unhandled.js'
-import { errorHandler } from '#root/bot/handlers/error.js'
-import { updateLogger } from '#root/bot/middlewares/update-logger.js'
-import { session } from '#root/bot/middlewares/session.js'
-import type { Context, SessionData } from '#root/bot/context.js'
-import { createContextConstructor } from '#root/bot/context.js'
-import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
-import type { Logger } from '#root/logger.js'
-import type { Config } from '#root/config.js'
-import type { PrismaClientX } from '#root/prisma/index.js'
-import { adminStartKeyboard } from '#root/bot/keyboards/index.js'
+import { autoChatAction } from "@grammyjs/auto-chat-action";
+import { hydrate } from "@grammyjs/hydrate";
+import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
+import { BotConfig, StorageAdapter, Bot as TelegramBot, session } from "grammy";
+import {
+  Context,
+  SessionData,
+  createContextConstructor,
+} from "#root/bot/context.js";
+import {
+  adminFeature,
+  languageFeature,
+  unhandledFeature,
+  welcomeFeature,
+} from "#root/bot/features/index.js";
+import { errorHandler } from "#root/bot/handlers/index.js";
+import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
+import { updateLogger } from "#root/bot/middlewares/index.js";
+import { config } from "#root/config.js";
+import { logger } from "#root/logger.js";
+import type { PrismaClientX } from "#root/prisma/index.js";
 
-interface Dependencies {
-  config: Config
-  logger: Logger
-  prisma: PrismaClientX
-}
+type Options = {
+  prisma: PrismaClientX;
+  sessionStorage?: StorageAdapter<SessionData>;
+  config?: Omit<BotConfig<Context>, "ContextConstructor">;
+};
 
-interface Options {
-  botSessionStorage?: StorageAdapter<SessionData>
-  botConfig?: Omit<BotConfig<Context>, 'ContextConstructor'>
-}
-
-function getSessionKey(ctx: Omit<Context, 'session'>) {
-  return ctx.chat?.id.toString()
-}
-
-export function createBot(token: string, dependencies: Dependencies, options: Options = {}) {
-  const {
-    config,
-    logger,
-    prisma,
-  } = dependencies
-
+export function createBot(token: string, options: Options) {
+  const { sessionStorage, prisma } = options;
   const bot = new TelegramBot(token, {
-    ...options.botConfig,
-    ContextConstructor: createContextConstructor({
-      logger,
-      config,
-      prisma,
-    }),
-  })
-  const protectedBot = bot.errorBoundary(errorHandler)
+    ...options.config,
+    ContextConstructor: createContextConstructor({ logger, prisma }),
+  });
+  const protectedBot = bot.errorBoundary(errorHandler);
 
   // Middlewares
-  bot.api.config.use(parseMode('HTML'))
+  bot.api.config.use(parseMode("HTML"));
 
-  if (config.isPollingMode)
-    protectedBot.use(sequentialize(getSessionKey))
-  if (config.isDebug)
-    protectedBot.use(updateLogger())
-  protectedBot.use(autoChatAction(bot.api))
-  protectedBot.use(hydrateReply)
-  protectedBot.use(hydrate())
-  protectedBot.use(session({ getSessionKey, storage: options.botSessionStorage }))
-  protectedBot.use(i18n)
+  if (config.isDev) {
+    protectedBot.use(updateLogger());
+  }
+
+  protectedBot.use(autoChatAction(bot.api));
+  protectedBot.use(hydrateReply);
+  protectedBot.use(hydrate());
+  protectedBot.use(
+    session({
+      initial: () => ({}),
+      storage: sessionStorage,
+    }),
+  );
+  protectedBot.use(i18n);
 
   // Handlers
-  protectedBot.use(welcomeFeature)
-  protectedBot.use(adminFeature)
-  if (isMultipleLocales)
-    protectedBot.use(languageFeature)
+  protectedBot.use(welcomeFeature);
+  protectedBot.use(adminFeature);
+
+  if (isMultipleLocales) {
+    protectedBot.use(languageFeature);
+  }
 
   // Actions on startup
-  bot.api.sendMessage(config.botMaintainer, '🟢 Bot has been started!', {
-    reply_markup: adminStartKeyboard,
-  })
+  bot.api.sendMessage(config.BOT_MAINTAINER, "Bot has been started");
 
   // must be the last handler
-  protectedBot.use(unhandledFeature)
+  protectedBot.use(unhandledFeature);
 
-  return bot
+  return bot;
 }
 
-export type Bot = ReturnType<typeof createBot>
+export type Bot = ReturnType<typeof createBot>;

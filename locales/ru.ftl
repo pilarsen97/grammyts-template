@@ -1,22 +1,14 @@
-## Commands
+start_command = 
+    .description = Запуск бота
+language_command = 
+    .description = Смена языка
+setcommands_command =
+    .description = Установить команду
 
-start-command-description = Запустить бота
-language-command-description = Изменить язык
-setcommands-command-description = Установить команды бота
-
-## Welcome Feature
-
-welcome = Добро пожаловать!
-
-## Language Feature
-
-language-select = Пожалуйста, выберите ваш язык
-language-changed = Язык успешно изменен!
-
-## Admin Feature
-
-admin-commands-updated = Команды обновлены.
-
-## Unhandled Feature
-
+welcome = Welcome!
+language = 
+    .select = Пожалуйста, выберите язык
+    .changed = Язык успешно изменен!
+admin =
+    .commands-updated = Команды обновлены.
 unhandled = Неизвестная команда. Попробуйте /start
